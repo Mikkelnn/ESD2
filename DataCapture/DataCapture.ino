@@ -174,7 +174,7 @@ void loop() {
   char input = Serial.read();
   if (input == 'r') vTaskResume(xHandle_vTaskPulseControl);
   else if (input == 'd') {
-    for (int i = 0; i < 10 /*DATA_BUFFER*/; i++) {
+    for (int i = 0; i < /*10*/ DATA_BUFFER; i++) {
       for (int j = 0; j < N_CHANNELS; j++) {
         Serial.print((buffer[i] & (0xff << j*8)) >> j*8, DEC);
         if (j < N_CHANNELS-1) Serial.print(',');
