@@ -1,8 +1,23 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.signal import butter, lfilter
+
+def butter_bandpass(lowcut, highcut, fs, order=5):
+    nyq = 0.5 * fs
+    low = lowcut / nyq
+    high = highcut / nyq
+    b, a = butter(order, [low, high], btype='band')
+    return b, a
+
+def butter_bandpass_filter(data, lowcut, highcut, fs, order=5):
+    b, a = butter_bandpass(lowcut, highcut, fs, order=order)
+    y = lfilter(b, a, data)
+    return y
+
 
 # Load data from the CSV file
-data = np.genfromtxt('wavegen-39khz.txt', delimiter=',')
+# data = np.genfromtxt('t:/Repoes/AAU/ESD2/Project/FFT_python/wavegen-39khz.txt', delimiter=',')
+data = np.genfromtxt('t:/Repoes/AAU/ESD2/Project/FFT_python/test1.txt', delimiter=',')
 
 # Separate the columns
 column1 = data[:, 0]
@@ -16,51 +31,78 @@ column2 = column2 - np.mean(column2)
 column3 = column3 - np.mean(column3)
 column4 = column4 - np.mean(column4)
 
-# Perform FFT on each column
-fft1 = np.fft.fft(column1)
-fft2 = np.fft.fft(column2)
-fft3 = np.fft.fft(column3)
-fft4 = np.fft.fft(column4)
-
 # Calculate the frequencies
-sampling_rate = 80000  # Assuming unit sampling rate, modify if needed
 n = len(data)
-freq_resolution = sampling_rate / n
-frequencies = np.fft.fftfreq(n, d=1/sampling_rate) * sampling_rate
+sampling_rate = 80000  # Assuming unit sampling rate, modify if needed
+sampels_per_ms = sampling_rate / 1000
+frequencies = np.fft.rfftfreq(n, d=1/sampling_rate)
 
-# Define y-axis range
-y_range = (0, 1e4)  # Adjust as per your signal's amplitude range
+low = 38200
+high = 39000
+order = 5
+filtered = butter_bandpass_filter(data[:, 0], low, high, sampling_rate, order)
+ms = 5
+
+# Perform FFT on each column
+fft1 = np.fft.rfft(column1)
+fft2 = np.fft.rfft(filtered)
+fft3 = np.fft.rfft(column3)
+fft4 = np.fft.rfft(column4)
 
 # Plot the spectra
 plt.figure(figsize=(12, 8))
 
-plt.subplot(2, 2, 1)
+plt.subplot(4, 1, 1)
 plt.plot(frequencies, np.abs(fft1))
-plt.title('Column 1 Spectrum')
+plt.title('Channel 1 Spectrum (Raw)')
 plt.xlabel('Frequency (Hz)')
 plt.ylabel('Amplitude')
-plt.ylim(y_range)
 
-plt.subplot(2, 2, 2)
+plt.subplot(4, 1, 2)
+plt.plot(column1[:int(sampels_per_ms * ms)])
+plt.title('Raw signal')
+plt.xlabel(f'Time ({ms} ms)')
+plt.ylabel('Amplitude')
+
+
+
+plt.subplot(4, 1, 3)
 plt.plot(frequencies, np.abs(fft2))
-plt.title('Column 2 Spectrum')
+plt.title(f'Channel 1 Filtered Spectrum (Filter (low={low}, high={high}, order={order}))')
 plt.xlabel('Frequency (Hz)')
 plt.ylabel('Amplitude')
-plt.ylim(y_range)
 
-plt.subplot(2, 2, 3)
-plt.plot(frequencies, np.abs(fft3))
-plt.title('Column 3 Spectrum')
-plt.xlabel('Frequency (Hz)')
+plt.subplot(4, 1, 4)
+plt.plot(filtered[:int(sampels_per_ms * ms)])
+plt.title(f'Filtered signal (Filter (low={low}, high={high}, order={order}))')
+plt.xlabel(f'Time ({ms} ms)')
 plt.ylabel('Amplitude')
-plt.ylim(y_range)
 
-plt.subplot(2, 2, 4)
-plt.plot(frequencies, np.abs(fft4))
-plt.title('Column 4 Spectrum')
-plt.xlabel('Frequency (Hz)')
-plt.ylabel('Amplitude')
-plt.ylim(y_range)
+# plt.subplot(2, 2, 3)
+# plt.plot(frequencies, np.abs(fft3))
+# plt.title('Column 3 Spectrum')
+# plt.xlabel('Frequency (Hz)')
+# plt.ylabel('Amplitude')
+
+# plt.subplot(2, 2, 4)
+# plt.plot(frequencies, np.abs(fft4))
+# plt.title('Column 4 Spectrum')
+# plt.xlabel('Frequency (Hz)')
+# plt.ylabel('Amplitude')
+
+
+print('Raw:')
+for i, x in enumerate(np.abs(fft1)):
+  if x > 70000:
+    print(f'Frequency {frequencies[i]}Hz; {x}')
+
+print('Filtered:')
+for i, x in enumerate(np.abs(fft2)):
+  if x > 30000:
+    print(f'Frequency {frequencies[i]}Hz; {x}')
+
+
+
 
 plt.tight_layout()
 plt.show()
