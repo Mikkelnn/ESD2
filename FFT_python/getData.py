@@ -4,7 +4,6 @@ import numpy as np
 from io import StringIO
 import matplotlib.pyplot as plt
 
-import csv
 
 ser = serial.Serial(
     port='/COM3',
@@ -46,14 +45,13 @@ f.close()
 
 # exit()
 data = np.genfromtxt(StringIO(data), delimiter=',')
-# data = np.genfromtxt('test2.txt', delimiter=',')
-
 
 sampling_rate = 80000
 sampels_per_ms = sampling_rate / 1000 
 ms = 5
 
-N_channels = 4
+# get number of channels from data
+N_channels = data.shape[1]
 
 # Separate the columns
 channels = []
