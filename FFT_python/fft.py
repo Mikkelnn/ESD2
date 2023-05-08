@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import butter, lfilter
+import easygui 
 
 def butter_bandpass(lowcut, highcut, fs, order=5):
     nyq = 0.5 * fs
@@ -16,20 +17,19 @@ def butter_bandpass_filter(data, lowcut, highcut, fs, order=5):
 
 
 # Load data from the CSV file
-# data = np.genfromtxt('t:/Repoes/AAU/ESD2/Project/FFT_python/wavegen-39khz.txt', delimiter=',')
-data = np.genfromtxt('t:/Repoes/AAU/ESD2/Project/FFT_python/test1.txt', delimiter=',')
+file_path = easygui.fileopenbox()
+data = np.genfromtxt(file_path, delimiter=',')
+
+
+N_channels = 4
 
 # Separate the columns
-column1 = data[:, 0]
-column2 = data[:, 1]
-column3 = data[:, 2]
-column4 = data[:, 3]
+channels = []
 
-# Remove DC offset
-column1 = column1 - np.mean(column1)
-column2 = column2 - np.mean(column2)
-column3 = column3 - np.mean(column3)
-column4 = column4 - np.mean(column4)
+for i in range(0, N_channels):
+  channels.append(data[:, i])
+  channels[i] = channels[i] - np.mean(channels[i]) # Remove DC offset
+
 
 # Calculate the frequencies
 n = len(data)
@@ -40,8 +40,56 @@ frequencies = np.fft.rfftfreq(n, d=1/sampling_rate)
 low = 38200
 high = 39000
 order = 5
-filtered = butter_bandpass_filter(data[:, 0], low, high, sampling_rate, order)
 ms = 5
+
+
+
+Channel_plots = 4
+N_plots = N_channels * Channel_plots
+
+# Plot the spectra
+plt.figure(figsize=(3*N_plots, 8))
+
+for i in range(0, N_channels):
+  filtered = butter_bandpass_filter(data[:, i], low, high, sampling_rate, order)
+  # Perform FFT on each column
+  fft_raw = np.fft.rfft(channels[i])
+  fft_filtered = np.fft.rfft(filtered)
+
+  plt.subplot(N_plots, 1, (i*Channel_plots)+1)
+  plt.plot(frequencies, np.abs(fft_raw))
+  plt.title(f'Channel {i} Spectrum (Raw)')
+  plt.xlabel('Frequency (Hz)')
+  plt.ylabel('Amplitude')
+
+  plt.subplot(N_plots, 1, (i*Channel_plots)+2)
+  plt.plot(channels[i][:int(sampels_per_ms * ms)])
+  plt.title(f'Channel {i} Raw signal')
+  plt.xlabel(f'Time ({ms} ms)')
+  plt.ylabel('Amplitude')
+
+  # Filtered signal
+  plt.subplot(N_plots, 1, (i*Channel_plots)+3)
+  plt.plot(frequencies, np.abs(fft_filtered))
+  plt.title(f'Channel {i} Filtered Spectrum (Filter (low={low}, high={high}, order={order}))')
+  plt.xlabel('Frequency (Hz)')
+  plt.ylabel('Amplitude')
+
+  plt.subplot(N_plots, 1, (i*Channel_plots)+4)
+  plt.plot(filtered[:int(sampels_per_ms * ms)])
+  plt.title(f'Channel {i} Filtered signal (Filter (low={low}, high={high}, order={order}))')
+  plt.xlabel(f'Time ({ms} ms)')
+  plt.ylabel('Amplitude')
+
+plt.tight_layout()
+plt.show()
+
+
+
+exit()
+
+
+
 
 # Perform FFT on each column
 fft1 = np.fft.rfft(column1)
