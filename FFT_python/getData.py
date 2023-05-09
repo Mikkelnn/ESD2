@@ -36,7 +36,7 @@ while ser.in_waiting:
 ser.close()
 
 print(f'data: {len(data)}')
-f = open(f'csv_data/{time.strftime("%Y%m%d-%H%M%S")}.csv', 'w')
+f = open(f'lyd_lab/{time.strftime("%Y%m%d-%H%M%S")}.csv', 'w')
 f.write(data.replace('\r\n', '\n'))
 f.close()
 
@@ -48,7 +48,7 @@ data = np.genfromtxt(StringIO(data), delimiter=',')
 
 sampling_rate = 80000
 sampels_per_ms = sampling_rate / 1000 
-ms = 5
+ms = 15
 
 # get number of channels from data
 N_channels = data.shape[1]
