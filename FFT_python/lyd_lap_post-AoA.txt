@@ -1,0 +1,265 @@
+20230509-095839.csv:
+channels used: [0, 3]
+filteredCrossCorrelation (full):
+idx shift: -9.5, delay (us): -118.75, AoA: -33
+filteredCrossCorrelation (same):
+idx shift: -9.0, delay (us): -112.5, AoA: -31 
+
+20230509-100144.csv:
+channels used: [0, 3]
+filteredCrossCorrelation (full):
+idx shift: 5.5, delay (us): 68.75, AoA: 18
+filteredCrossCorrelation (same):
+idx shift: 6.0, delay (us): 75.0, AoA: 20 
+
+20230509-100420.csv:
+channels used: [0, 3]
+filteredCrossCorrelation (full):
+idx shift: -0.5, delay (us): -6.25, AoA: -2
+filteredCrossCorrelation (same):
+idx shift: 0.0, delay (us): 0.0, AoA: 0    
+
+20230509-100717.csv:
+channels used: [0, 3]
+filteredCrossCorrelation (full):
+idx shift: -16.5, delay (us): -206.25, AoA: -71
+filteredCrossCorrelation (same):
+idx shift: -16.0, delay (us): -200.0, AoA: -66 
+
+20230509-100828.csv:
+channels used: [0, 3]
+filteredCrossCorrelation (full):
+idx shift: 34.5, delay (us): 431.25, AoA: 90
+filteredCrossCorrelation (same):
+idx shift: 35.0, delay (us): 437.5, AoA: 90 
+
+20230509-100927.csv:
+channels used: [0, 1]
+filteredCrossCorrelation (full):
+idx shift: -529.5, delay (us): -6618.75, AoA: -90
+filteredCrossCorrelation (same):
+idx shift: -529.0, delay (us): -6612.5, AoA: -90 
+
+20230509-101159.csv:
+channels used: [0, 1]
+filteredCrossCorrelation (full):
+idx shift: -466.5, delay (us): -5831.25, AoA: -90
+filteredCrossCorrelation (same):
+idx shift: -466.0, delay (us): -5825.0, AoA: -90
+
+20230509-101302.csv:
+channels used: [0, 1]
+filteredCrossCorrelation (full):
+idx shift: -16.5, delay (us): -206.25, AoA: -71
+filteredCrossCorrelation (same):
+idx shift: -16.0, delay (us): -200.0, AoA: -66
+
+20230509-101348-(5v direct right).csv:
+channels used: [0, 1]
+filteredCrossCorrelation (full):
+idx shift: 4.5, delay (us): 56.25, AoA: 15
+filteredCrossCorrelation (same):
+idx shift: 5.0, delay (us): 62.5, AoA: 17
+
+20230509-101514-(5v direct center).csv:
+channels used: [0, 1]
+filteredCrossCorrelation (full):
+idx shift: 8.5, delay (us): 106.25, AoA: 29
+filteredCrossCorrelation (same):
+idx shift: 9.0, delay (us): 112.5, AoA: 31
+
+20230509-101718-(5v direct center).csv:
+channels used: [0, 1]
+filteredCrossCorrelation (full):
+idx shift: -0.5, delay (us): -6.25, AoA: -2
+filteredCrossCorrelation (same):
+idx shift: 0.0, delay (us): 0.0, AoA: 0
+
+20230509-101926-(5v direct left).csv:
+channels used: [0, 1]
+filteredCrossCorrelation (full):
+idx shift: -5.5, delay (us): -68.75, AoA: -18
+filteredCrossCorrelation (same):
+idx shift: -5.0, delay (us): -62.5, AoA: -17
+
+20230509-102829-(10v witeboard center).csv:
+channels used: [0, 1]
+filteredCrossCorrelation (full):
+idx shift: -5.5, delay (us): -68.75, AoA: -18
+filteredCrossCorrelation (same):
+idx shift: -5.0, delay (us): -62.5, AoA: -17
+
+20230509-103010.csv:
+channels used: [0, 1]
+filteredCrossCorrelation (full):
+idx shift: -1.5, delay (us): -18.75, AoA: -5
+filteredCrossCorrelation (same):
+idx shift: -1.0, delay (us): -12.5, AoA: -3
+
+20230509-103043-(10v witeboard right).csv:
+channels used: [0, 1]
+filteredCrossCorrelation (full):
+idx shift: -1.5, delay (us): -18.75, AoA: -5
+filteredCrossCorrelation (same):
+idx shift: -1.0, delay (us): -12.5, AoA: -3
+
+20230509-103244-(10v witeboard right).csv:
+channels used: [0, 1]
+filteredCrossCorrelation (full):
+idx shift: -191.5, delay (us): -2393.75, AoA: -90
+filteredCrossCorrelation (same):
+idx shift: -191.0, delay (us): -2387.5, AoA: -90
+
+20230509-103338-(10v witeboard left).csv:
+channels used: [0, 1]
+filteredCrossCorrelation (full):
+idx shift: 23.5, delay (us): 293.75, AoA: 90
+filteredCrossCorrelation (same):
+idx shift: 24.0, delay (us): 300.0, AoA: 90
+
+20230509-103516-(10v wood center).csv:
+channels used: [0, 1]
+filteredCrossCorrelation (full):
+idx shift: -44.5, delay (us): -556.25, AoA: -90
+filteredCrossCorrelation (same):
+idx shift: -44.0, delay (us): -550.0, AoA: -90
+
+20230509-103604-(10v wood right).csv:
+channels used: [0, 1]
+filteredCrossCorrelation (full):
+idx shift: -815.5, delay (us): -10193.75, AoA: -90
+filteredCrossCorrelation (same):
+idx shift: -815.0, delay (us): -10187.5, AoA: -90
+
+20230509-103644-(10v wood left).csv:
+channels used: [0, 1]
+filteredCrossCorrelation (full):
+idx shift: -414.5, delay (us): -5181.25, AoA: -90
+filteredCrossCorrelation (same):
+idx shift: -414.0, delay (us): -5175.0, AoA: -90
+
+20230509-103732-(10v human left).csv:
+channels used: [0, 1]
+filteredCrossCorrelation (full):
+idx shift: 2.5, delay (us): 31.25, AoA: 8
+filteredCrossCorrelation (same):
+idx shift: 3.0, delay (us): 37.5, AoA: 10
+
+20230509-103829-(10v human center).csv:
+channels used: [0, 1]
+filteredCrossCorrelation (full):
+idx shift: -16.5, delay (us): -206.25, AoA: -71
+filteredCrossCorrelation (same):
+idx shift: -16.0, delay (us): -200.0, AoA: -66
+
+20230509-103919-(10v human right).csv:
+channels used: [0, 1]
+filteredCrossCorrelation (full):
+idx shift: -1566.5, delay (us): -19581.25, AoA: -90
+filteredCrossCorrelation (same):
+idx shift: -1566.0, delay (us): -19575.0, AoA: -90
+
+20230509-104014.csv:
+channels used: [0, 1]
+filteredCrossCorrelation (full):
+idx shift: 1740.5, delay (us): 21756.25, AoA: 90
+filteredCrossCorrelation (same):
+idx shift: 1741.0, delay (us): 21762.5, AoA: 90
+
+20230509-104315.csv:
+channels used: [0, 1]
+filteredCrossCorrelation (full):
+idx shift: -210.5, delay (us): -2631.25, AoA: -90
+filteredCrossCorrelation (same):
+idx shift: -210.0, delay (us): -2625.0, AoA: -90
+
+20230509-104414-(human center 2m).csv:
+channels used: [0, 3]
+filteredCrossCorrelation (full):
+idx shift: 19.5, delay (us): 243.75, AoA: 90
+filteredCrossCorrelation (same):
+idx shift: 20.0, delay (us): 250.0, AoA: 90
+
+20230509-104512.csv:
+channels used: [0, 3]
+filteredCrossCorrelation (full):
+idx shift: 24.5, delay (us): 306.25, AoA: 90
+filteredCrossCorrelation (same):
+idx shift: 25.0, delay (us): 312.5, AoA: 90
+
+20230509-104608-(human right 2m).csv:
+channels used: [0, 3]
+filteredCrossCorrelation (full):
+idx shift: 716.5, delay (us): 8956.25, AoA: 90
+filteredCrossCorrelation (same):
+idx shift: 717.0, delay (us): 8962.5, AoA: 90
+
+20230509-104720-(human left 2m).csv:
+channels used: [0, 3]
+filteredCrossCorrelation (full):
+idx shift: 10927.5, delay (us): 136593.75, AoA: 90
+filteredCrossCorrelation (same):
+idx shift: 6993.0, delay (us): 87412.5, AoA: 90
+
+20230509-105008-(wood left 2m).csv:
+channels used: [0, 3]
+filteredCrossCorrelation (full):
+idx shift: 8.5, delay (us): 106.25, AoA: 29
+filteredCrossCorrelation (same):
+idx shift: 9.0, delay (us): 112.5, AoA: 31
+
+20230509-105110-(wood center 2m).csv:
+channels used: [0, 3]
+filteredCrossCorrelation (full):
+idx shift: 7.5, delay (us): 93.75, AoA: 25
+filteredCrossCorrelation (same):
+idx shift: 8.0, delay (us): 100.0, AoA: 27
+
+20230509-105245-(wood right 2m).csv:
+channels used: [0, 3]
+filteredCrossCorrelation (full):
+idx shift: -9.5, delay (us): -118.75, AoA: -33
+filteredCrossCorrelation (same):
+idx shift: -9.0, delay (us): -112.5, AoA: -31
+
+20230509-105333-(whiteboard right 2m).csv:
+channels used: [0, 3]
+filteredCrossCorrelation (full):
+idx shift: 6.5, delay (us): 81.25, AoA: 22
+filteredCrossCorrelation (same):
+idx shift: 7.0, delay (us): 87.5, AoA: 24
+
+20230509-105443-(whiteboard center 2m).csv:
+channels used: [0, 3]
+filteredCrossCorrelation (full):
+idx shift: 8.5, delay (us): 106.25, AoA: 29
+filteredCrossCorrelation (same):
+idx shift: 9.0, delay (us): 112.5, AoA: 31
+
+20230509-105531-(whiteboard left 2m).csv:
+channels used: [0, 3]
+filteredCrossCorrelation (full):
+idx shift: 12307.5, delay (us): 153843.75, AoA: 90
+filteredCrossCorrelation (same):
+idx shift: 5951.0, delay (us): 74387.5, AoA: 90
+
+20230509-105810-(human side left 2m).csv:
+channels used: [0, 3]
+filteredCrossCorrelation (full):
+idx shift: 9658.5, delay (us): 120731.25, AoA: 90
+filteredCrossCorrelation (same):
+idx shift: 7375.0, delay (us): 92187.5, AoA: 90
+
+20230509-105904-(human side center 2m).csv:
+channels used: [0, 3]
+filteredCrossCorrelation (full):
+idx shift: 2051.5, delay (us): 25643.75, AoA: 90
+filteredCrossCorrelation (same):
+idx shift: 2052.0, delay (us): 25650.0, AoA: 90
+
+20230509-110036-(human side right 2m).csv:
+channels used: [0, 3]
+filteredCrossCorrelation (full):
+idx shift: -10.5, delay (us): -131.25, AoA: -37
+filteredCrossCorrelation (same):
+idx shift: -10.0, delay (us): -125.0, AoA: -35
