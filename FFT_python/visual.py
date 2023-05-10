@@ -1,10 +1,13 @@
 import turtle
 import math
 
-def drawObj(AoA, dist_cm, mic_dist_cm = 7.5, n_channels = 2):
+def drawObj(AoA, dist_cm, mic_dist_cm = 7.5, n_channels = 2, file_name = None):
   t = turtle.Turtle()
   t.hideturtle() #this hides the arrow
   t.speed(0) #turn off animation
+
+  if not file_name is None:    
+    turtle.title(file_name)
 
   def goto(x,y):
     t.pu()
@@ -44,4 +47,22 @@ def drawObj(AoA, dist_cm, mic_dist_cm = 7.5, n_channels = 2):
   t.write(f'distance: {int(dist_cm)} cm\nAoA: {AoA} deg', False)
   t.pd()
 
-  turtle.done()
+  return t
+
+# import threading
+# threading.Thread(target=drawObj, args=(45,100)).start()
+# threading.Thread(target=drawObj, args=(45,100)).start()
+
+from PIL import Image
+import io
+
+illustration = drawObj(45, 100)
+
+# global hen
+ps = illustration.screen.getcanvas().postscript(colormode = 'color')
+im = Image.open(io.BytesIO(ps.encode('utf-8')))
+im.save('img-test' + '.jpg')
+
+# illu_im = Image.open(io.BytesIO(ps.encode('utf-8')))
+# illu_im.show()
+

@@ -15,8 +15,9 @@ sampels_per_ms = sampling_rate / 1000
 sound_speed_cm_per_s = 34300 # speed of sound in cm/s
 mic_dist_cm = 7.5 # distance between microphones in cm
 pulse_width_ms = 1
+pulse_width_sampels = int(pulse_width_ms * sampels_per_ms)
 
-low = 38200
+low = 38200 # low = 38200
 high = 38700
 order = 5
 ms = 200 # number of milliseconds of data to display 
@@ -56,9 +57,20 @@ def butter_bandpass_filter(data, lowcut, highcut, fs, order=5):
     return y
 
 
+def butter_highpass(cut, fs, order=5):
+    nyq = 0.5 * fs
+    ny_cut = cut / nyq
+    b, a = butter(order, [ny_cut], btype='highpass')
+    return b, a
+
+def butter_highpass_filter(data, cut, fs, order=5):
+    b, a = butter_highpass(cut, fs, order=order)
+    y = lfilter(b, a, data)
+    return y
 
 def calculate(file_path):
   # Load data from the CSV file
+  file_name = file_path.split('\\')[-1]
   data = np.genfromtxt(file_path, delimiter=',')
 
   # get number of channels from data
@@ -69,8 +81,13 @@ def calculate(file_path):
   channels = []
   filtered = []
   for i in range(0, N_channels):
-    channels.append(data[int(pulse_width_ms * sampels_per_ms):, i]) # remove pulse at start
+    channels.append(data[pulse_width_sampels:, i]) # remove pulse at start
     channels[i] = channels[i] - np.mean(channels[i]) # Remove DC offset
+    # for j in range(0, len(channels[i])):
+    #    if abs(channels[i][j] - mean) > mean:
+    #       channels[i][j] = mean
+
+    # filtered.append(butter_highpass_filter(channels[i], low, sampling_rate, order))
     filtered.append(butter_bandpass_filter(channels[i], low, high, sampling_rate, order))
 
 
@@ -86,32 +103,35 @@ def calculate(file_path):
     print('only one channel! - can´t cross correlate.....')
     return
 
+
+
+  # determine the first occurence of the pulse recieved  
+  blockShift_0 = np.correlate(filtered[used_channels[0]], signal_block, mode='valid').argmax() + pulse_width_sampels
+  blockShift_1 = np.correlate(filtered[used_channels[1]], signal_block, mode='valid').argmax() + pulse_width_sampels
+  signalDelay = blockShift_0 if blockShift_0 < blockShift_1 else blockShift_1
+  distance_cm = signalDelay * sampel_period_us * 0.000001 * sound_speed_cm_per_s
+
+  # detrmine the max correlation length
+  max_sampels_between_mics = math.ceil(((mic_dist_cm / sound_speed_cm_per_s) * 1000000) / sampel_period_us)
+  max_correlation_sampel = int(signalDelay + (2 * max_sampels_between_mics))
+  min_correlation_sampel = max(0, int(signalDelay - (pulse_width_sampels + (2 * max_sampels_between_mics))))
+
+  print(f'min_correlation_sampel: {min_correlation_sampel}, max_correlation_sampel: {max_correlation_sampel}')
+
   # Calculate cross correlation
-  filteredCrossCorrelation_full = np.correlate(filtered[used_channels[1]], filtered[used_channels[0]], mode='full')
-  filteredCrossCorrelation_same = np.correlate(filtered[used_channels[1]], filtered[used_channels[0]], mode='same')
-  
-  print('filteredCrossCorrelation (full):')
-  fshift_full = filteredCrossCorrelation_full.argmax() - (len(filteredCrossCorrelation_full) / 2)
-  print(f'idx shift: {fshift_full}, delay (us): {fshift_full * sampel_period_us}, AoA: {angleFromShift(fshift_full)[0]}')
+  filteredCrossCorrelation_same = np.correlate(filtered[used_channels[1]][min_correlation_sampel:max_correlation_sampel], filtered[used_channels[0]][min_correlation_sampel:max_correlation_sampel], mode='same')
 
   print('filteredCrossCorrelation (same):')
   fshift_same = filteredCrossCorrelation_same.argmax() - (len(filteredCrossCorrelation_same) / 2)
   print(f'idx shift: {fshift_same}, delay (us): {fshift_same * sampel_period_us}, AoA: {angleFromShift(fshift_same)[0]}')
-
-  blockShift_0 = np.correlate(filtered[used_channels[0]], signal_block, mode='valid').argmax() + int(pulse_width_ms * sampels_per_ms)
-  blockShift_1 = np.correlate(filtered[used_channels[1]], signal_block, mode='valid').argmax() + int(pulse_width_ms * sampels_per_ms)
-
   print(f'blockShift_0: {blockShift_0}, blockShift_1: {blockShift_1}, diff: {blockShift_1 - blockShift_0}, AoA: {angleFromShift(blockShift_1 - blockShift_0)[0]}')
-
-  # determine the closest channel i.e the channel first recieving the signal
-  refSignal = used_channels[0] if fshift_same > 0 else used_channels[1]
-  signalDelay = np.correlate(filtered[refSignal], signal_block, mode='valid').argmax() + int(pulse_width_ms * sampels_per_ms) # compåensate for the start signal
-  distance_cm = signalDelay * sampel_period_us * 0.000001 * sound_speed_cm_per_s
   print(f'estimated distance (cm): {distance_cm * 0.5}')
 
   # draw visualization of data
-  Thread(target=visual.drawObj, args=(angleFromShift(fshift_same)[0], distance_cm * 0.5, mic_dist_cm, N_used_channels)).start()
+  illustration = visual.drawObj(angleFromShift(fshift_same)[0], distance_cm * 0.5, mic_dist_cm, N_used_channels, file_name)
   
+  # return
+
   # Plot the spectra
   Channel_plots = 2
   N_plots = (N_used_channels * Channel_plots)
@@ -133,6 +153,7 @@ def calculate(file_path):
     plt.xlabel(f'Time ({ms} ms)')
     plt.ylabel('Amplitude')
 
+
   # # correlation plots
   # plt.subplot(N_plots, 1, N_plots-1)
   # plt.plot(crossCorrelation)
@@ -146,14 +167,46 @@ def calculate(file_path):
   # plt.xlabel(f'Sample shift')
   # plt.ylabel('Similarity')
 
-  plt.tight_layout()
-  plt.show()
+  plt.tight_layout()  
+  # plt.show()
 
+  from PIL import Image
+  import io
 
+  # plt_buf = io.BytesIO()
+  # plt.savefig(plt_buf, format='png')
+  # plt_buf.seek(0)
+  # plt_im = Image.open(plt_buf)
+  # plt_buf.close()
 
-file_path = easygui.fileopenbox()
+  ps = illustration.getscreen().getcanvas().postscript(colormode = 'color')
+  illu_im = Image.open(io.BytesIO(ps.encode('utf-8')))
+  illu_im.show()
+  
+  # print("loaded...")
+
+  # save_name = f'{file_path.split(".")[0]}.jpg'
+  # illu_im.save("/tres.jpg", 'jpeg')
+  #illu_im.show()
+  #plt_im.show()
+
+  # x_spacing = 25
+  # x_saize = plt_im.size[1] + illu_im.size[1] + x_spacing
+  # y_size = max(plt_im.size[0], illu_im.size[0])
+  
+  # print(f'size: ({x_saize}, {y_size})')
+
+  # new_image = Image.new('RGB',(x_saize, y_size), (250,250,250))
+  # new_image.paste(plt_im, (0, 0))
+  # new_image.paste(illu_im, (plt_im.size[1] + x_spacing, 0))
+  # new_image.save(f'{file_name.split(".")[0]}.jpg', 'JPEG')
+  # new_image.show()
+
+file_path = "T:\\Repoes\\AAU\\ESD2\\Project\\FFT_python\\lyd_lab\\20230509-105810-(human side left 2m).csv" 
+# file_path = easygui.fileopenbox()
 print(file_path + ':')
 calculate(file_path)
+
 
 # import os
 # def get_files(path):
