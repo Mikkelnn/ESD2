@@ -106,15 +106,15 @@ def calculate(file_path):
 
 
   # determine the first occurence of the pulse recieved  
-  blockShift_0 = np.correlate(filtered[used_channels[0]], signal_block, mode='valid').argmax() + pulse_width_sampels
-  blockShift_1 = np.correlate(filtered[used_channels[1]], signal_block, mode='valid').argmax() + pulse_width_sampels
+  blockShift_0 = np.correlate(filtered[used_channels[0]], signal_block, mode='valid').argmax()
+  blockShift_1 = np.correlate(filtered[used_channels[1]], signal_block, mode='valid').argmax()
   signalDelay = blockShift_0 if blockShift_0 < blockShift_1 else blockShift_1
-  distance_cm = signalDelay * sampel_period_us * 0.000001 * sound_speed_cm_per_s
+  distance_cm = (signalDelay + pulse_width_sampels) * sampel_period_us * 0.000001 * sound_speed_cm_per_s
 
   # detrmine the max correlation length
   max_sampels_between_mics = math.ceil(((mic_dist_cm / sound_speed_cm_per_s) * 1000000) / sampel_period_us)
-  max_correlation_sampel = int(signalDelay + (2 * max_sampels_between_mics))
-  min_correlation_sampel = max(0, int(signalDelay - (pulse_width_sampels + (2 * max_sampels_between_mics))))
+  max_correlation_sampel = int(signalDelay + pulse_width_sampels + (2 * max_sampels_between_mics))
+  min_correlation_sampel = max(0, int(signalDelay - (2 * max_sampels_between_mics)))
 
   print(f'min_correlation_sampel: {min_correlation_sampel}, max_correlation_sampel: {max_correlation_sampel}')
 
@@ -122,7 +122,7 @@ def calculate(file_path):
   filteredCrossCorrelation_same = np.correlate(filtered[used_channels[1]][min_correlation_sampel:max_correlation_sampel], filtered[used_channels[0]][min_correlation_sampel:max_correlation_sampel], mode='same')
 
   print('filteredCrossCorrelation (same):')
-  fshift_same = filteredCrossCorrelation_same.argmax() - (len(filteredCrossCorrelation_same) / 2)
+  fshift_same = filteredCrossCorrelation_same.argmax() - int((max_correlation_sampel-min_correlation_sampel-1) / 2) # (len(filteredCrossCorrelation_same) / 2)
   print(f'idx shift: {fshift_same}, delay (us): {fshift_same * sampel_period_us}, AoA: {angleFromShift(fshift_same)[0]}')
   print(f'blockShift_0: {blockShift_0}, blockShift_1: {blockShift_1}, diff: {blockShift_1 - blockShift_0}, AoA: {angleFromShift(blockShift_1 - blockShift_0)[0]}')
   print(f'estimated distance (cm): {distance_cm * 0.5}')
@@ -201,7 +201,7 @@ def calculate(file_path):
   # illustration.destroy()
 
 # file_path = "lyd_lab\\20230509-105810-(human side left 2m).csv" 
-# # file_path = easygui.fileopenbox()
+# file_path = easygui.fileopenbox()
 # print(file_path + ':')
 # calculate(file_path)
 

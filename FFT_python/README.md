@@ -7,8 +7,13 @@
 
 ## install ghostscript
 
-`https://ghostscript.com/releases/gsdnld.html`
+<!-- `https://ghostscript.com/releases/gsdnld.html` -->
+
+install `./gs10011w64.exe`
 
 ### Windows (cmd or powershell)
 
-- `set "PATH=%PATH%;C:\Program Files\gs\gs10.01.1\bin;C:\Program Files\gs\gs10.01.1\temp"`
+Add following to enviorment variable "PATH"
+
+- `C:\Program Files\gs\gs10.01.1\bin`
+- `C:\Program Files\gs\gs10.01.1\temp`
