@@ -3,6 +3,7 @@ import math
 
 def drawObj(AoA, dist_cm, mic_dist_cm = 7.5, n_channels = 2, file_name = None):
   t = turtle.Turtle()
+  t.getscreen().clear()
   t.hideturtle() #this hides the arrow
   t.speed(0) #turn off animation
 
@@ -21,7 +22,7 @@ def drawObj(AoA, dist_cm, mic_dist_cm = 7.5, n_channels = 2, file_name = None):
   r_mic = 1.5
   scale = 10
 
-  t.goto(0,0)
+  t.goto(0, 0)
   t.color('red')
   t.circle(1)
   t.color('black')
@@ -44,25 +45,13 @@ def drawObj(AoA, dist_cm, mic_dist_cm = 7.5, n_channels = 2, file_name = None):
   t.back(dist_cm/2)
   t.right(-AoA + 90)
   t.forward(1*scale)
-  t.write(f'distance: {int(dist_cm)} cm\nAoA: {AoA} deg', False)
+  t.write(f'distance: {int(dist_cm)} cm\nAoA: {AoA} deg', False, font=("Arial", 20, "normal"))
   t.pd()
 
-  return t
+  canvas = t.getscreen().getcanvas()
+  canvas.scale("all", 0, -t.getscreen().window_height()/4, 2, 2)
+  return canvas
 
-# import threading
-# threading.Thread(target=drawObj, args=(45,100)).start()
-# threading.Thread(target=drawObj, args=(45,100)).start()
-
-from PIL import Image
-import io
-
-illustration = drawObj(45, 100)
-
-# global hen
-ps = illustration.screen.getcanvas().postscript(colormode = 'color')
-im = Image.open(io.BytesIO(ps.encode('utf-8')))
-im.save('img-test' + '.jpg')
-
-# illu_im = Image.open(io.BytesIO(ps.encode('utf-8')))
-# illu_im.show()
+# drawObj(45, 100)
+# turtle.done()
 

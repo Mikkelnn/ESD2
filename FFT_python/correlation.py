@@ -173,49 +173,47 @@ def calculate(file_path):
   from PIL import Image
   import io
 
-  # plt_buf = io.BytesIO()
-  # plt.savefig(plt_buf, format='png')
-  # plt_buf.seek(0)
-  # plt_im = Image.open(plt_buf)
-  # plt_buf.close()
+  plt_buf = io.BytesIO()
+  plt.savefig(plt_buf, format='png')
+  plt_buf.seek(0)
+  plt_im = Image.open(plt_buf)
 
-  ps = illustration.getscreen().getcanvas().postscript(colormode = 'color')
+  ps = illustration.postscript(colormode = 'color')
   illu_im = Image.open(io.BytesIO(ps.encode('utf-8')))
-  illu_im.show()
+
+  x_spacing = 25
+  x_size = plt_im.size[0] + illu_im.size[0] + x_spacing
+  y_size = max(plt_im.size[1], illu_im.size[1])
   
-  # print("loaded...")
+  print(f'size: ({x_size}, {y_size})')
 
-  # save_name = f'{file_path.split(".")[0]}.jpg'
-  # illu_im.save("/tres.jpg", 'jpeg')
-  #illu_im.show()
-  #plt_im.show()
-
-  # x_spacing = 25
-  # x_saize = plt_im.size[1] + illu_im.size[1] + x_spacing
-  # y_size = max(plt_im.size[0], illu_im.size[0])
-  
-  # print(f'size: ({x_saize}, {y_size})')
-
-  # new_image = Image.new('RGB',(x_saize, y_size), (250,250,250))
-  # new_image.paste(plt_im, (0, 0))
-  # new_image.paste(illu_im, (plt_im.size[1] + x_spacing, 0))
-  # new_image.save(f'{file_name.split(".")[0]}.jpg', 'JPEG')
+  new_image = Image.new('RGB',(x_size, y_size), (255,255,255))
+  new_image.paste(plt_im, (0, 0))
+  new_image.paste(illu_im, (plt_im.size[0] + x_spacing, 0))
+  new_image.save(f'output_images\\{file_name.split(".")[0]}.jpg', 'JPEG')
   # new_image.show()
 
-file_path = "T:\\Repoes\\AAU\\ESD2\\Project\\FFT_python\\lyd_lab\\20230509-105810-(human side left 2m).csv" 
-# file_path = easygui.fileopenbox()
-print(file_path + ':')
-calculate(file_path)
+  # cleanup
+  plt.close()
+  plt_buf.close()
+  plt_im.close()
+  illu_im.close()
+  # illustration.destroy()
+
+# file_path = "lyd_lab\\20230509-105810-(human side left 2m).csv" 
+# # file_path = easygui.fileopenbox()
+# print(file_path + ':')
+# calculate(file_path)
 
 
-# import os
-# def get_files(path):
-#     for file in os.listdir(path):
-#         filePath = os.path.join(path, file)
-#         if os.path.isfile(filePath):
-#             yield file, filePath
+import os
+def get_files(path):
+    for file in os.listdir(path):
+        filePath = os.path.join(path, file)
+        if os.path.isfile(filePath):
+            yield file, filePath
 
-# for file_path in get_files(easygui.diropenbox()):
-#   print(file_path[0] + ':')
-#   calculate(file_path[1])
-#   print('')
+for file_path in get_files(easygui.diropenbox()):
+  print(file_path[0] + ':')
+  calculate(file_path[1])
+  print('')
