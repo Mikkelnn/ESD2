@@ -1,0 +1,23 @@
+lyd_lab\\20230509-095839.csv:
+channels used: [0, 3]
+min_correlation_sampel: 723, max_correlation_sampel: 875
+filteredCrossCorrelation (same):
+idx shift: 8, delay (us): 100.0, AoA: 27
+blockShift_0: 759, blockShift_1: 768, diff: 9, AoA: 31
+estimated distance (cm): 179.860625
+
+lyd_lab\\20230509-100420.csv:
+channels used: [0, 3]
+min_correlation_sampel: 548, max_correlation_sampel: 700
+filteredCrossCorrelation (same):
+idx shift: 1, delay (us): 12.5, AoA: 3
+blockShift_0: 584, blockShift_1: 586, diff: 2, AoA: 7
+estimated distance (cm): 142.345
+channels used: [0, 3]
+
+lyd_lab\\20230509-100828.csv:
+min_correlation_sampel: 508, max_correlation_sampel: 660
+filteredCrossCorrelation (same):
+idx shift: -9, delay (us): -112.5, AoA: -31
+blockShift_0: 579, blockShift_1: 544, diff: -35, AoA: -90
+estimated distance (cm): 133.76999999999998
