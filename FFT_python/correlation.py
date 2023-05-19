@@ -20,7 +20,7 @@ pulse_width_sampels = int(pulse_width_ms * sampels_per_ms)
 low = 38200 # low = 38200
 high = 38700
 order = 5
-ms = 200 # number of milliseconds of data to display 
+ms = 20 # number of milliseconds of data to display 
 
 signal_block = []
 for i in range (0, int(pulse_width_ms * sampels_per_ms)):
@@ -141,14 +141,14 @@ def calculate(file_path):
   for i in range(0, N_used_channels):
 
     plt.subplot(N_plots, 1, (i*Channel_plots)+1)
-    plt.plot(channels[used_channels[i]][:int(sampels_per_ms * ms)])
+    plt.plot(channels[used_channels[i]][min_correlation_sampel-20:max_correlation_sampel+20]) # [:int(sampels_per_ms * ms)]
     plt.title(f'Channel {used_channels[i]} Raw signal')
     plt.xlabel(f'Time ({ms} ms)')
     plt.ylabel('Amplitude')
 
     # Filtered signal
     plt.subplot(N_plots, 1, (i*Channel_plots)+2)
-    plt.plot(filtered[used_channels[i]][:int(sampels_per_ms * ms)])
+    plt.plot(filtered[used_channels[i]][min_correlation_sampel-20:max_correlation_sampel+20]) # [:int(sampels_per_ms * ms)]
     plt.title(f'Channel {used_channels[i]} Filtered signal (Filter (low={low}, high={high}, order={order}))')
     plt.xlabel(f'Time ({ms} ms)')
     plt.ylabel('Amplitude')
@@ -174,9 +174,15 @@ def calculate(file_path):
   import io
 
   plt_buf = io.BytesIO()
-  plt.savefig(plt_buf, format='png')
+  plt.savefig(plt_buf, format='jpg')
   plt_buf.seek(0)
   plt_im = Image.open(plt_buf)
+
+  plt_im.save(f'output_images_report\\{file_name.split(".")[0]}.jpg', 'JPEG')
+  plt.close()
+  plt_buf.close()
+  plt_im.close()
+  return
 
   ps = illustration.postscript(colormode = 'color')
   illu_im = Image.open(io.BytesIO(ps.encode('utf-8')))
@@ -200,20 +206,24 @@ def calculate(file_path):
   illu_im.close()
   # illustration.destroy()
 
-# file_path = "lyd_lab\\20230509-105810-(human side left 2m).csv" 
+# file_path =  
 # file_path = easygui.fileopenbox()
 # print(file_path + ':')
 # calculate(file_path)
 
+process = ["lyd_lab\\20230509-095839.csv", "lyd_lab\\20230509-100420.csv", "lyd_lab\\20230509-100828.csv"]
+for file_path in process:
+  calculate(file_path)
 
-import os
-def get_files(path):
-    for file in os.listdir(path):
-        filePath = os.path.join(path, file)
-        if os.path.isfile(filePath):
-            yield file, filePath
 
-for file_path in get_files(easygui.diropenbox()):
-  print(file_path[0] + ':')
-  calculate(file_path[1])
-  print('')
+# import os
+# def get_files(path):
+#     for file in os.listdir(path):
+#         filePath = os.path.join(path, file)
+#         if os.path.isfile(filePath):
+#             yield file, filePath
+
+# for file_path in get_files(easygui.diropenbox()):
+#   print(file_path[0] + ':')
+#   calculate(file_path[1])
+#   print('')

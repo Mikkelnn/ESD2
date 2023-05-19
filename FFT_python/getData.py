@@ -36,7 +36,7 @@ while ser.in_waiting:
 ser.close()
 
 print(f'data: {len(data)}')
-f = open(f'lyd_lab/{time.strftime("%Y%m%d-%H%M%S")}.csv', 'w')
+f = open(f'ADC-module-test/{time.strftime("%Y%m%d-%H%M%S")}.csv', 'w')
 f.write(data.replace('\r\n', '\n'))
 f.close()
 

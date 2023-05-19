@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import butter, lfilter
 import easygui
+import math
 
 sampling_rate = 80000  # Assuming unit sampling rate, modify if needed
 sampels_per_ms = sampling_rate / 1000
@@ -66,10 +67,10 @@ for i in range(0, N_used_channels):
   fft_filtered = np.fft.rfft(filtered[used_channels[i]])
 
   plt.subplot(N_plots, 1, (i*Channel_plots)+1)
-  plt.plot(frequencies, np.abs(fft_raw))
+  plt.plot(frequencies, 20 * np.log10(np.abs(fft_raw)))
   plt.title(f'Channel {used_channels[i]} Spectrum (Raw)')
   plt.xlabel('Frequency (Hz)')
-  plt.ylabel('Amplitude')
+  plt.ylabel('Amplitude (dB)')
 
   plt.subplot(N_plots, 1, (i*Channel_plots)+2)
   plt.plot(channels[used_channels[i]][:int(sampels_per_ms * ms)])
@@ -79,10 +80,10 @@ for i in range(0, N_used_channels):
 
   # Filtered signal
   plt.subplot(N_plots, 1, (i*Channel_plots)+3)
-  plt.plot(frequencies, np.abs(fft_filtered))
+  plt.plot(frequencies, 20 * np.log10(np.abs(fft_filtered)))
   plt.title(f'Channel {used_channels[i]} Filtered Spectrum (Filter (low={low}, high={high}, order={order}))')
   plt.xlabel('Frequency (Hz)')
-  plt.ylabel('Amplitude')
+  plt.ylabel('Amplitude (dB)')
 
   plt.subplot(N_plots, 1, (i*Channel_plots)+4)
   plt.plot(filtered[used_channels[i]][:int(sampels_per_ms * ms)])
