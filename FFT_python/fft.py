@@ -10,7 +10,7 @@ sampels_per_ms = sampling_rate / 1000
 low = 38000
 high = 39000
 order = 5
-ms = 10
+ms = 200
 
 def butter_bandpass(lowcut, highcut, fs, order=5):
     nyq = 0.5 * fs
@@ -55,7 +55,7 @@ N_used_channels = len(used_channels)
 n = len(data)
 frequencies = np.fft.rfftfreq(n, d=1/sampling_rate)
 
-Channel_plots = 4
+Channel_plots = 1
 N_plots = N_used_channels * Channel_plots
 
 # Plot the spectra
@@ -66,30 +66,30 @@ for i in range(0, N_used_channels):
   fft_raw = np.fft.rfft(channels[used_channels[i]])
   fft_filtered = np.fft.rfft(filtered[used_channels[i]])
 
-  plt.subplot(N_plots, 1, (i*Channel_plots)+1)
-  plt.plot(frequencies, 20 * np.log10(np.abs(fft_raw)))
-  plt.title(f'Channel {used_channels[i]} Spectrum (Raw)')
-  plt.xlabel('Frequency (Hz)')
-  plt.ylabel('Amplitude (dB)')
+  # plt.subplot(N_plots, 1, (i*Channel_plots)+1)
+  # plt.plot(frequencies, 20 * np.log10(np.abs(fft_raw)))
+  # plt.title(f'Channel {used_channels[i]} Spectrum (Raw)')
+  # plt.xlabel('Frequency (Hz)')
+  # plt.ylabel('Amplitude (dB)')
 
-  plt.subplot(N_plots, 1, (i*Channel_plots)+2)
+  plt.subplot(N_plots, 1, (i*Channel_plots)+1)
   plt.plot(channels[used_channels[i]][:int(sampels_per_ms * ms)])
   plt.title(f'Channel {used_channels[i]} Raw signal')
   plt.xlabel(f'Time ({ms} ms)')
   plt.ylabel('Amplitude')
 
-  # Filtered signal
-  plt.subplot(N_plots, 1, (i*Channel_plots)+3)
-  plt.plot(frequencies, 20 * np.log10(np.abs(fft_filtered)))
-  plt.title(f'Channel {used_channels[i]} Filtered Spectrum (Filter (low={low}, high={high}, order={order}))')
-  plt.xlabel('Frequency (Hz)')
-  plt.ylabel('Amplitude (dB)')
+  # # Filtered signal
+  # plt.subplot(N_plots, 1, (i*Channel_plots)+3)
+  # plt.plot(frequencies, 20 * np.log10(np.abs(fft_filtered)))
+  # plt.title(f'Channel {used_channels[i]} Filtered Spectrum (Filter (low={low}, high={high}, order={order}))')
+  # plt.xlabel('Frequency (Hz)')
+  # plt.ylabel('Amplitude (dB)')
 
-  plt.subplot(N_plots, 1, (i*Channel_plots)+4)
-  plt.plot(filtered[used_channels[i]][:int(sampels_per_ms * ms)])
-  plt.title(f'Channel {used_channels[i]} Filtered signal (Filter (low={low}, high={high}, order={order}))')
-  plt.xlabel(f'Time ({ms} ms)')
-  plt.ylabel('Amplitude')
+  # plt.subplot(N_plots, 1, (i*Channel_plots)+4)
+  # plt.plot(filtered[used_channels[i]][:int(sampels_per_ms * ms)])
+  # plt.title(f'Channel {used_channels[i]} Filtered signal (Filter (low={low}, high={high}, order={order}))')
+  # plt.xlabel(f'Time ({ms} ms)')
+  # plt.ylabel('Amplitude')
 
 plt.tight_layout()
 plt.show()

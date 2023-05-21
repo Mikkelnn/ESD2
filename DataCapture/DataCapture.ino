@@ -9,6 +9,7 @@
 
 #define SAMPLE_FREQUENCY 80000 // 80Khz
 #define DATA_BUFFER (SAMPLE_FREQUENCY / 5) // samples for 200ms
+#define ADC_BIT_RESOLUTION 8
 #define N_CHANNELS 4
 
 #define PULSE_WIDTH_MS 1 // 20ms pulse length ~6.86m sound travel
@@ -46,7 +47,6 @@ void fInitializeSPI_Devices(spi_device_handle_t &h, int csPin)
   spi_bus_add_device(HSPI_HOST, &dev_config, &h);  
 }
 
-
 void fReadSPIdata(spi_device_handle_t &h, void * data, int length)
 {
     spi_transaction_t trans_desc = { };
@@ -61,127 +61,120 @@ void fReadSPIdata(spi_device_handle_t &h, void * data, int length)
     spi_device_polling_transmit(h, &trans_desc);
 }
 
-uint32_t data_pos = 0;
+uint16_t data_pos = 0;
 uint32_t buffer[DATA_BUFFER];
-uint32_t data = 0;
 
 // setting PWM properties for ADC/PISO registers
-const int ADC_freq = 80000;
+const int ADC_PWM_freq = 80000;
 const int ADC_PWM_Channel = 0;
-const int ADC_resolution = 8;
-const int Dutycycle_24_Percent = 2.55 * 76.0; // LOW ~3us @80khz
+const int ADC_PWM_resolution = 8;
+const int Dutycycle_76_Percent = 2.55 * 76.0; // LOW ~3us @80khz
 
 // setting PWM properties for transducer PWM
 const int Transducer_freq = 39000;
-const int Transducer_PWM_Channel = 2;
+const int Transducer_PWM_Channel = 2; // channel 0 and 1 is shared
 const int Transducer_resolution = 8;
 const int Dutycycle_50_Percent = 127;
 
-TaskHandle_t xHandle_vTaskGetData, xHandle_vTaskPulseControl;
+TaskHandle_t xHandle_vTaskAcquireData, xHandle_vTaskPulseControl;
 
-void vTaskGetData(void *pvParameters)
+void vTaskAcquireData(void *pvParameters)
 {
-  bool current, prevState = 0;
-  vTaskSuspend(NULL); // Wait untill resumed by control logic  
-  ledcWrite(ADC_PWM_Channel, Dutycycle_24_Percent);
+  // configure PWM for ADC and PISO registers
+  ledcSetup(ADC_PWM_Channel, ADC_PWM_freq, ADC_PWM_resolution);  
+  // attach the channel to the GPIO to be controlled
+  ledcAttachPin(SH_LD, ADC_PWM_Channel);
+
+  bool currentState, prevState = 0;
   for(;;)
   {
-    current = (REG_READ(GPIO_IN_REG) & (1 << DATA_IRQ)) > 0;
-    if (prevState == current) continue; // same - skip
-    else if (prevState == 0) {
-      // RISING edge registered
-      prevState = current;
-      continue;
-    }
-
-    // FALLING edge registered 
-    prevState = current;
-
-    // REG_WRITE(GPIO_OUT_W1TS_REG, 1 << 5); // set GPIO 5 HIGH at IRQ start
-
-    fReadSPIdata(spi_device, &(buffer[data_pos++]), N_CHANNELS * 8);
-
     // Stop after buffer is filled, wait untill resumed by control logic
-    if (data_pos >= DATA_BUFFER) {
-      data_pos = 0;
-      ledcWrite(ADC_PWM_Channel, 0);
-      vTaskSuspend(NULL);
-      ledcWrite(ADC_PWM_Channel, Dutycycle_24_Percent);
+    data_pos = 0; // reset buffer pointer
+    ledcWrite(ADC_PWM_Channel, 0); // turn OFF the PWM signal
+    vTaskSuspend(NULL); // Wait untill triggered from control logic    
+    ledcWrite(ADC_PWM_Channel, Dutycycle_76_Percent); // set the duty cycle of the PWM channel
+
+    while (data_pos < DATA_BUFFER) {
+      // determine if the IRQ pin is HIGH or LOW
+      currentState = (REG_READ(GPIO_IN_REG) & (1 << DATA_IRQ)) > 0;
+      if (prevState == currentState) continue; // same -> skip
+      else if (prevState == 0) {
+        // RISING edge registered
+        // if the IRQ pin has changed and previously was LOW -> RISING edge
+        prevState = currentState;
+        continue;
+      }
+
+      // FALLING edge registered
+      // if the IRQ pin has changed and previously was HIGH -> FALLING edge
+      prevState = currentState;
+
+      // start SPI data setup and transfer
+      fReadSPIdata(spi_device, &(buffer[data_pos++]), N_CHANNELS * ADC_BIT_RESOLUTION);
     }
-  
-    // REG_WRITE(GPIO_OUT_W1TC_REG, 1 << 5); // set GPIO 5 HIGH at IRQ start
   }
 }
 
 
-// Control the ultrasonic pulse duration and start of sampleing
-// Transmits a single pulse and starts the sampeling for the specified time period
+// Control the ultrasonic pulse duration, transmits a single pulse
 void vTaskPulseControl(void *pvParameters) {
-    for (;;) {
-      vTaskSuspend(NULL); // Wait untill triggered
-      REG_WRITE(GPIO_OUT_W1TS_REG, 1 << 17); // set GPIO 5 HIGH at IRQ start
-
-      vTaskResume(xHandle_vTaskGetData);
-      ledcWrite(Transducer_PWM_Channel, Dutycycle_50_Percent); // Start transmission
-      // vTaskDelay(PULSE_WIDTH_MS / portTICK_PERIOD_MS);
-      delayMicroseconds(PULSE_WIDTH_MS * 1000);
-      ledcWrite(Transducer_PWM_Channel, 0); // Off
-
-      REG_WRITE(GPIO_OUT_W1TC_REG, 1 << 17); // set GPIO 5 HIGH at IRQ start
-    }
-}
-
-void setup() {
-  pinMode(17, OUTPUT); // for DEBUG only!
-  pinMode(DATA_IRQ, INPUT); // Used to determine if the ADC_PWM
-
-  fInitializeSPI_Channel(VSPI_CLK, VSPI_MISO);
-  fInitializeSPI_Devices(spi_device, -1);
-  spi_device_acquire_bus(spi_device, portMAX_DELAY);
-
-  xTaskCreatePinnedToCore(vTaskGetData, "GetData", 1000, NULL, configMAX_PRIORITIES - 1, &xHandle_vTaskGetData, 0);
-  xTaskCreatePinnedToCore(vTaskPulseControl, "PulseControl", 1000, NULL, configMAX_PRIORITIES - 1, &xHandle_vTaskPulseControl, 1);
-
-  Serial.begin(115200);
-  Serial.println("init:");
-  
-
-  // configure PWM for ADC and PISO registers
-  ledcSetup(ADC_PWM_Channel, ADC_freq, ADC_resolution);  
-  // attach the channel to the GPIO to be controlled
-  ledcAttachPin(SH_LD, ADC_PWM_Channel);
-  // set the duty cycle of the PWM channel
-  ledcWrite(ADC_PWM_Channel, 0);
-
   // configure PWM for the transducer
   ledcSetup(Transducer_PWM_Channel, Transducer_freq, Transducer_resolution);
   // attach the channel to the GPIO to be controlled
   ledcAttachPin(TRANSDUCER_PWM, Transducer_PWM_Channel);
-  // set the duty cycle of the PWM channel
-  ledcWrite(Transducer_PWM_Channel, 0); // Off
+
+  for (;;) {
+    // End ultrasonic pulse transmission
+    ledcWrite(Transducer_PWM_Channel, 0); // Off
+
+    // Wait untill triggered
+    vTaskSuspend(NULL); 
+
+    // Start ultrasonic pulse transmission
+    ledcWrite(Transducer_PWM_Channel, Dutycycle_50_Percent);
+
+    // Wait for the pulse duration/width
+    delayMicroseconds(PULSE_WIDTH_MS * 1000);
+  }
 }
 
-// uint64_t lastTime = 0;
-// int interval_ms = 10000; // 10 seconds
+void setup() {
+  // Set ÍRQ pin to input
+  // Used to determine if the ADC_PWM has started new ADC conversion
+  pinMode(DATA_IRQ, INPUT);
+
+  // Configure SPI
+  fInitializeSPI_Channel(VSPI_CLK, VSPI_MISO);
+  fInitializeSPI_Devices(spi_device, -1);
+  spi_device_acquire_bus(spi_device, portMAX_DELAY);
+
+  // Register tasks with highest priority pinned specific core
+  xTaskCreatePinnedToCore(vTaskAcquireData, "AcquireData", 1000, NULL, configMAX_PRIORITIES - 1, &xHandle_vTaskAcquireData, 0);
+  xTaskCreatePinnedToCore(vTaskPulseControl, "PulseControl", 1000, NULL, configMAX_PRIORITIES - 1, &xHandle_vTaskPulseControl, 1);
+
+  // Initialize serial connection
+  Serial.begin(115200);
+}
+
 void loop() {
-  // if (millis() - lastTime > interval_ms) {
-  //   lastTime = millis();
-
-  //   Serial.print("Count: "); Serial.print(count, DEC); Serial.print(", Errors: "); Serial.print(errors, DEC); Serial.print(", maxDiff: "); Serial.print(maxDiff, DEC); Serial.println();
-  // }
-
   if (!Serial.available()) return;
+
   char input = Serial.read();
-  if (input == 'r') vTaskResume(xHandle_vTaskPulseControl);
-  else if (input == 'd') {
-    for (int i = 0; i < /*10*/ DATA_BUFFER; i++) {
+  if (input == 'r') {
+    // Start the ultrasonic pulse and data acquisition
+    // Start ADC conversions and data aquisition
+    vTaskResume(xHandle_vTaskAcquireData);
+    // Start ultrasonic pulse
+    vTaskResume(xHandle_vTaskPulseControl);
+  } else if (input == 'd') {
+    // transfer data as CSV - "ch0,ch1,ch2,ch3"
+    for (int i = 0; i < DATA_BUFFER; i++) {
       for (int j = 0; j < N_CHANNELS; j++) {
         Serial.print((buffer[i] & (0xff << j*8)) >> j*8, DEC);
         if (j < N_CHANNELS-1) Serial.print(',');
         else Serial.println();
       }
     }
-      
   } 
 }
 

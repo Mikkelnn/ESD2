@@ -42,7 +42,8 @@ def angleFromShift(shift):
     if (smallest == None or current < smallest):
       smallest = current
       sidx = idx
-  return sidx - 90, smallest
+  # 90 is subtracted to denote zero degrees is perpendicular to the microphone array
+  return sidx - 90
 
 def butter_bandpass(lowcut, highcut, fs, order=5):
     nyq = 0.5 * fs
@@ -83,19 +84,13 @@ def calculate(file_path):
   for i in range(0, N_channels):
     channels.append(data[pulse_width_sampels:, i]) # remove pulse at start
     channels[i] = channels[i] - np.mean(channels[i]) # Remove DC offset
-    # for j in range(0, len(channels[i])):
-    #    if abs(channels[i][j] - mean) > mean:
-    #       channels[i][j] = mean
-
-    # filtered.append(butter_highpass_filter(channels[i], low, sampling_rate, order))
     filtered.append(butter_bandpass_filter(channels[i], low, high, sampling_rate, order))
-
 
   # Find channels with data - i.e non zeros
   used_channels = []
   for i in range(0, N_channels):
     if np.sum(np.abs(channels[i])) > 0:
-        used_channels.append(i)
+      used_channels.append(i)
 
   N_used_channels = len(used_channels)
   print(f'channels used: {used_channels}')
@@ -109,26 +104,30 @@ def calculate(file_path):
   blockShift_0 = np.correlate(filtered[used_channels[0]], signal_block, mode='valid').argmax()
   blockShift_1 = np.correlate(filtered[used_channels[1]], signal_block, mode='valid').argmax()
   signalDelay = blockShift_0 if blockShift_0 < blockShift_1 else blockShift_1
-  distance_cm = (signalDelay + pulse_width_sampels) * sampel_period_us * 0.000001 * sound_speed_cm_per_s
+  # calculate the distance from the microphone array to the object
+  distance_cm = (signalDelay + pulse_width_sampels) * sampel_period_us * 0.000001 * sound_speed_cm_per_s * 0.5
 
-  # detrmine the max correlation length
+  # detrmine the max and min index for correlation
   max_sampels_between_mics = math.ceil(((mic_dist_cm / sound_speed_cm_per_s) * 1000000) / sampel_period_us)
-  max_correlation_sampel = int(signalDelay + pulse_width_sampels + (2 * max_sampels_between_mics))
-  min_correlation_sampel = max(0, int(signalDelay - (2 * max_sampels_between_mics)))
-
-  print(f'min_correlation_sampel: {min_correlation_sampel}, max_correlation_sampel: {max_correlation_sampel}')
+  margin = (2 * max_sampels_between_mics)
+  max_correlation_sampel = min(len(used_channels[0]) - 1, int(signalDelay + pulse_width_sampels + margin))
+  min_correlation_sampel = max(0, int(signalDelay - margin))
 
   # Calculate cross correlation
-  filteredCrossCorrelation_same = np.correlate(filtered[used_channels[1]][min_correlation_sampel:max_correlation_sampel], filtered[used_channels[0]][min_correlation_sampel:max_correlation_sampel], mode='same')
-
-  print('filteredCrossCorrelation (same):')
-  fshift_same = filteredCrossCorrelation_same.argmax() - int((max_correlation_sampel-min_correlation_sampel-1) / 2) # (len(filteredCrossCorrelation_same) / 2)
-  print(f'idx shift: {fshift_same}, delay (us): {fshift_same * sampel_period_us}, AoA: {angleFromShift(fshift_same)[0]}')
-  print(f'blockShift_0: {blockShift_0}, blockShift_1: {blockShift_1}, diff: {blockShift_1 - blockShift_0}, AoA: {angleFromShift(blockShift_1 - blockShift_0)[0]}')
-  print(f'estimated distance (cm): {distance_cm * 0.5}')
+  x_section = filtered[used_channels[1]][min_correlation_sampel:max_correlation_sampel]
+  y_section = filtered[used_channels[0]][min_correlation_sampel:max_correlation_sampel]
+  max_correlation_idx = np.correlate(x_section, y_section, mode='same').argmax()
+  relative_shift = max_correlation_idx - int((max_correlation_sampel-min_correlation_sampel-1) * 0.5)
 
   # draw visualization of data
-  illustration = visual.drawObj(angleFromShift(fshift_same)[0], distance_cm * 0.5, mic_dist_cm, N_used_channels, file_name)
+  illustration = visual.drawObj(angleFromShift(relative_shift), distance_cm, mic_dist_cm, N_used_channels, file_name)
+
+  print(f'min_correlation_sampel: {min_correlation_sampel}, max_correlation_sampel: {max_correlation_sampel}')
+  print('filteredCrossCorrelation (same):')
+  print(f'idx shift: {relative_shift}, delay (us): {relative_shift * sampel_period_us}, AoA: {angleFromShift(relative_shift)}')
+  print(f'blockShift_0: {blockShift_0}, blockShift_1: {blockShift_1}, diff: {blockShift_1 - blockShift_0}, AoA: {angleFromShift(blockShift_1 - blockShift_0)}')
+  print(f'estimated distance (cm): {distance_cm}')
+
   
   # return
 
