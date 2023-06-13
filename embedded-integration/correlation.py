@@ -6,7 +6,7 @@ import math
 
 # visualize data
 from threading import Thread
-import visual
+# import visual
 
 # Calculate the frequencies
 sampling_rate = 80000  # Assuming unit sampling rate, modify if needed
@@ -82,8 +82,9 @@ def calculate(file_path):
   channels = []
   filtered = []
   for i in range(0, N_channels):
-    channels.append(data[pulse_width_sampels:, i]) # remove pulse at start
-    channels[i] = channels[i] - np.mean(channels[i]) # Remove DC offset
+    channels.append(data[:, i]) # remove pulse at start
+    # channels[i] = channels[i] - np.mean(channels[i]) # Remove DC offset
+    # filtered.append(channels[i])
     filtered.append(butter_bandpass_filter(channels[i], low, high, sampling_rate, order))
 
   # Find channels with data - i.e non zeros
@@ -101,11 +102,11 @@ def calculate(file_path):
 
 
   # determine the first occurence of the pulse recieved  
-  blockShift_0 = np.correlate(filtered[used_channels[0]], signal_block, mode='valid').argmax()
-  blockShift_1 = np.correlate(filtered[used_channels[1]], signal_block, mode='valid').argmax()
+  blockShift_0 = np.correlate(filtered[used_channels[0]][pulse_width_sampels:], signal_block, mode='valid').argmax() + pulse_width_sampels
+  blockShift_1 = np.correlate(filtered[used_channels[1]][pulse_width_sampels:], signal_block, mode='valid').argmax() + pulse_width_sampels
   signalDelay = blockShift_0 if blockShift_0 < blockShift_1 else blockShift_1
   # calculate the distance from the microphone array to the object
-  distance_cm = (signalDelay + pulse_width_sampels) * sampel_period_us * 0.000001 * sound_speed_cm_per_s * 0.5
+  distance_cm = signalDelay * sampel_period_us * 0.000001 * sound_speed_cm_per_s * 0.5
 
   # detrmine the max and min index for correlation
   max_sampels_between_mics = math.ceil(((mic_dist_cm / sound_speed_cm_per_s) * 1000000) / sampel_period_us)
@@ -120,18 +121,16 @@ def calculate(file_path):
   relative_shift = max_correlation_idx - int((max_correlation_sampel-min_correlation_sampel-1) * 0.5)
 
   print(f'Python: AoA: {angleFromShift(relative_shift)}, estimated distance (cm): {distance_cm}')
-
+  print(f'signalDelay: {signalDelay}')
+  print(f'min_correlation_sampel: {min_correlation_sampel}, max_correlation_sampel: {max_correlation_sampel}')
+  print(f'idx shift: {relative_shift}, delay (us): {relative_shift * sampel_period_us}, AoA: {angleFromShift(relative_shift)}')
+  print(f'blockShift_0: {blockShift_0}, blockShift_1: {blockShift_1}, diff: {blockShift_1 - blockShift_0}, AoA: {angleFromShift(blockShift_1 - blockShift_0)}')
   return
 
   # draw visualization of data
   illustration = visual.drawObj(angleFromShift(relative_shift), distance_cm, mic_dist_cm, N_used_channels, file_name)
 
 
-  print(f'min_correlation_sampel: {min_correlation_sampel}, max_correlation_sampel: {max_correlation_sampel}')
-  print('filteredCrossCorrelation (same):')
-  print(f'idx shift: {relative_shift}, delay (us): {relative_shift * sampel_period_us}, AoA: {angleFromShift(relative_shift)}')
-  print(f'blockShift_0: {blockShift_0}, blockShift_1: {blockShift_1}, diff: {blockShift_1 - blockShift_0}, AoA: {angleFromShift(blockShift_1 - blockShift_0)}')
-  print(f'estimated distance (cm): {distance_cm}')
 
   
   # return
@@ -215,9 +214,9 @@ def calculate(file_path):
 # print(file_path + ':')
 # calculate(file_path)
 
-process = ["lyd_lab\\20230509-095839.csv", "lyd_lab\\20230509-100420.csv", "lyd_lab\\20230509-100828.csv"]
-for file_path in process:
-  calculate(file_path)
+# process = ["lyd_lab\\20230509-095839.csv", "lyd_lab\\20230509-100420.csv", "lyd_lab\\20230509-100828.csv"]
+# for file_path in process:
+#   calculate(file_path)
 
 
 # import os

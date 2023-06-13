@@ -66,15 +66,20 @@ void arrTest_3() {
 void example() {
   uint8_t x[] = {1, 2, 3, 4, 5};
   uint8_t y[] = {4, 5, 6, 7, 8};
-  int n = 4; // sizeof(x); // / sizeof(x[0]);
+  int n = 5; // sizeof(x); // / sizeof(x[0]);
 
-  int valid = cross_correlation_valid(x, y, n);
-  int same = cross_correlation_same(x, y, n);
-  int full = cross_correlation_full(x, y, n);
+  uint8_t buf[5][2] = {{1,4}, {2,5}, {3,6}, {4,7}, {5,8}};
 
-  printf("Max shift (valid): %d\n", valid);
+  // int valid = cross_correlation_valid(x, y, n);
+  int same = cross_correlation_same(x + 2, y + 2, n - 2);
+  int same2 = calculateCrossCorrelation(buf, 0, 1, 2, 4);
+  // int full = cross_correlation_full(x, y, n);
+
+  // printf("Max shift (valid): %d\n", valid);
   printf("Max shift (same): %d\n", same);
-  printf("Max shift (full): %d\n", full);
+  printf("Max shift (same2): %d\n", same2);
+
+  // printf("Max shift (full): %d\n", full);
 }
 
 void main() {
