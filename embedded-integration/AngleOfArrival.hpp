@@ -1,8 +1,10 @@
 
 #include <math.h>
 #include <limits.h>
-#include "T:\Repoes\AAU\ESD2\Project\embedded-integration\filter-c/filter.h"
-#include "T:\Repoes\AAU\ESD2\Project\embedded-integration\filter-c/filter.c"
+#include "C:\CSharp\AAU\ESD2\embedded-integration\filter-c/filter.h"
+#include "C:\CSharp\AAU\ESD2\embedded-integration\filter-c/filter.c"
+// #include "T:\Repoes\AAU\ESD2\Project\embedded-integration\filter-c/filter.h"
+// #include "T:\Repoes\AAU\ESD2\Project\embedded-integration\filter-c/filter.c"
 
 #define DATA_BUFFER 16000
 #define N_CHANNELS 4
@@ -17,7 +19,7 @@
 
 // settings for digital filter
 #define BAND_PASS_LOW_CUT 38200
-#define BAND_PASS_HIGH_CUT 38700
+#define BAND_PASS_HIGH_CUT 38700 // 39000
 #define BAND_PASS_ORDER 5
 
 #define MAX(i, j) (((i) > (j)) ? (i) : (j))
@@ -27,6 +29,8 @@ public:
   AngleOfArrival() {
     calculateAngleLookupTable();
     memset(signal_block, 255, PULSE_WIDTH_SAMPLES);
+    // for (int i = 0; i < PULSE_WIDTH_SAMPLES; i++)
+    //   signal_block[i] = (i % 2 == 0) ? 255 : 0;
   }
 
   int calculateAngleAndDistance(uint8_t (*buffer)[N_CHANNELS], int* angle, int* distance_cm) {
@@ -112,8 +116,8 @@ private:
       int correlation_0 = 0;
       int correlation_1 = 0;            
       for (int j = 0; j < PULSE_WIDTH_SAMPLES; j++) {
-        correlation_0 += buffer[i + j][channel1] * signal_block[j];
-        correlation_1 += buffer[i + j][channel2] * signal_block[j];
+        correlation_0 += ((int)buffer[i + j][channel1] - 127) * signal_block[j];
+        correlation_1 += ((int)buffer[i + j][channel2] - 127) * signal_block[j];
       }
       if (correlation_0 > max_correlation_0) {
         max_correlation_0 = correlation_0;
@@ -172,7 +176,7 @@ private:
               continue;
             }
 
-            sum += buffer[idx1][channel1] * buffer[idx2][channel2];
+            sum += (((int)buffer[idx1][channel1]) - 127) * (((int)buffer[idx2][channel2]) - 127);
         }
 
         if (sum >= max_correlation) {

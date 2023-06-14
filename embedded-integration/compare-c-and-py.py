@@ -14,7 +14,8 @@ ser = serial.Serial(
 
 
 # select csv file
-file_path = easygui.fileopenbox()
+# file_path = easygui.fileopenbox()
+file_path = "C:\CSharp\AAU\ESD2\FFT_python\lyd_lab\\20230509-105904-(human side center 2m).csv"
 # file_path = "T:\Repoes\AAU\ESD2\Project\FFT_python\lyd_lab\\20230509-105904-(human side center 2m).csv"
 data = np.genfromtxt(file_path, delimiter=',')
 
