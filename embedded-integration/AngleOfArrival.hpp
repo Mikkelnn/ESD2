@@ -35,26 +35,14 @@ public:
     int used_channels[N_CHANNELS];
     int num_used_channels = findUsedChannels(buffer, used_channels);
 
-    // Serial.print("Used channels: "); 
-    // for (int i = 0; i < num_used_channels; i++){
-    //   Serial.print(used_channels[i], DEC); Serial.print(", ");
-    // }
-    // Serial.println();
-
     // return error if under two active channels
     if (num_used_channels < 2) return 1;
 
     // process
     int signalDelay = fiilterAndFindSignalDelay(buffer, used_channels, num_used_channels);
-    // signalDelay = 905;
     int max_correlation_sample = calculateMaxCorrelationSample(signalDelay);
     int min_correlation_sample = calculateMinCorrelationSample(signalDelay);
     int relative_shift = calculateCrossCorrelationFiltered(buffer, used_channels[0], used_channels[1], min_correlation_sample, max_correlation_sample);
-
-    // Serial.print("signalDelay: "); Serial.println(signalDelay, DEC);
-    // Serial.print("max_correlation_sample: "); Serial.println(max_correlation_sample, DEC);
-    // Serial.print("min_correlation_sample: "); Serial.println(min_correlation_sample, DEC);
-    // Serial.print("relative_shift: "); Serial.println(relative_shift, DEC);
 
     (*distance_cm) = calculateDistance(signalDelay);
     (*angle) = calculateAngleFromShift(relative_shift);
