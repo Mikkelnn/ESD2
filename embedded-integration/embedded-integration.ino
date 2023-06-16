@@ -1,6 +1,7 @@
 #include <driver/spi_master.h>
 #include <soc/soc.h>
 #include "AngleOfArrival.hpp"
+// #include "data.h"
 
 #define SH_LD 22 // LOW triggers ADC sampeling - HIGH enabels serial shift (data is ready from ADC after <= 2.5us, set PWM to 30% LOW @ 80Khz)
 #define DATA_IRQ 21 // Loopback of SH_LD for interrupt on RISING-edge, indicates data is ready in PISO registers to be serially clocked into the MCU
@@ -175,6 +176,8 @@ void setup() {
 
   // Initialize serial connection
   Serial.begin(115200);
+
+  vTaskResume(xHandle_vTaskSignalProcessing);
 }
 
 void loop() {
@@ -193,7 +196,7 @@ void loop() {
     vTaskResume(xHandle_vTaskSignalProcessing);
   } else if (input == 'd') {
     // transfer data as CSV - "ch0,ch1,ch2,ch3"    
-    for (int i = 0; i < 20 /*DATA_BUFFER*/; i++) {
+    for (int i = DATA_BUFFER-1; i > DATA_BUFFER - 20; i--) {
       for (int j = 0; j < N_CHANNELS; j++) {
         Serial.print((buffer[i] & (0xff << j*8)) >> j*8, DEC);
         if (j < N_CHANNELS-1) Serial.print(',');

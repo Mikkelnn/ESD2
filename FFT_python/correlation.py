@@ -120,6 +120,14 @@ def calculate(file_path):
   relative_shift = max_correlation_idx - int((max_correlation_sampel-min_correlation_sampel-1) * 0.5)
 
   print(f'Python: AoA: {angleFromShift(relative_shift)}, estimated distance (cm): {distance_cm}')
+  print(f'signalDelay: {signalDelay}')
+  print(f'min_correlation_sampel: {min_correlation_sampel}, max_correlation_sampel: {max_correlation_sampel}')
+  print(f'idx shift: {relative_shift}, delay (us): {relative_shift * sampel_period_us}, AoA: {angleFromShift(relative_shift)}')
+  print(f'blockShift_0: {blockShift_0}, blockShift_1: {blockShift_1}, diff: {blockShift_1 - blockShift_0}, AoA: {angleFromShift(blockShift_1 - blockShift_0)}')
+
+  # print("x_section:y_section")
+  # for i,x in enumerate(x_section):
+  #    print(f'{x_section[i]}:{y_section[i]}')
 
   return
 
@@ -210,14 +218,14 @@ def calculate(file_path):
   illu_im.close()
   # illustration.destroy()
 
-# file_path =  
+file_path =  "T:\Repoes\AAU\ESD2\Project\FFT_python\lyd_lab\\20230509-105904-(human side center 2m).csv"
 # file_path = easygui.fileopenbox()
-# print(file_path + ':')
-# calculate(file_path)
+print(file_path + ':')
+calculate(file_path)
 
-process = ["lyd_lab\\20230509-095839.csv", "lyd_lab\\20230509-100420.csv", "lyd_lab\\20230509-100828.csv"]
-for file_path in process:
-  calculate(file_path)
+# process = ["lyd_lab\\20230509-095839.csv", "lyd_lab\\20230509-100420.csv", "lyd_lab\\20230509-100828.csv"]
+# for file_path in process:
+#   calculate(file_path)
 
 
 # import os

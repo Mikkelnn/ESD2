@@ -1,10 +1,10 @@
 
 #include <math.h>
 #include <limits.h>
-#include "C:\CSharp\AAU\ESD2\embedded-integration\filter-c/filter.h"
-#include "C:\CSharp\AAU\ESD2\embedded-integration\filter-c/filter.c"
-// #include "T:\Repoes\AAU\ESD2\Project\embedded-integration\filter-c/filter.h"
-// #include "T:\Repoes\AAU\ESD2\Project\embedded-integration\filter-c/filter.c"
+// #include "C:\CSharp\AAU\ESD2\embedded-integration\filter-c/filter.h"
+// #include "C:\CSharp\AAU\ESD2\embedded-integration\filter-c/filter.c"
+#include "T:\Repoes\AAU\ESD2\Project\embedded-integration\filter-c/filter.h"
+#include "T:\Repoes\AAU\ESD2\Project\embedded-integration\filter-c/filter.c"
 
 #define DATA_BUFFER 16000
 #define N_CHANNELS 4
@@ -19,40 +19,42 @@
 
 // settings for digital filter
 #define BAND_PASS_LOW_CUT 38200
-#define BAND_PASS_HIGH_CUT 38700 // 39000
-#define BAND_PASS_ORDER 5
+#define BAND_PASS_HIGH_CUT 38700
+#define BAND_PASS_ORDER 8 // 4th order low and high pass
 
 #define MAX(i, j) (((i) > (j)) ? (i) : (j))
+#define MIN(i, j) (((i) < (j)) ? (i) : (j))
 
 class AngleOfArrival {
 public:
   AngleOfArrival() {
     calculateAngleLookupTable();
-    memset(signal_block, 255, PULSE_WIDTH_SAMPLES);
-    // for (int i = 0; i < PULSE_WIDTH_SAMPLES; i++)
-    //   signal_block[i] = (i % 2 == 0) ? 255 : 0;
   }
 
   int calculateAngleAndDistance(uint8_t (*buffer)[N_CHANNELS], int* angle, int* distance_cm) {
     int used_channels[N_CHANNELS];
     int num_used_channels = findUsedChannels(buffer, used_channels);
 
+    // Serial.print("Used channels: "); 
+    // for (int i = 0; i < num_used_channels; i++){
+    //   Serial.print(used_channels[i], DEC); Serial.print(", ");
+    // }
+    // Serial.println();
+
     // return error if under two active channels
     if (num_used_channels < 2) return 1;
 
-    // filter used channels
-    filterUsedChannels(buffer, used_channels, num_used_channels);
-
     // process
-    int signalDelay = calculateSignalDelay(buffer, used_channels[0], used_channels[1]);
+    int signalDelay = fiilterAndFindSignalDelay(buffer, used_channels, num_used_channels);
+    // signalDelay = 905;
     int max_correlation_sample = calculateMaxCorrelationSample(signalDelay);
     int min_correlation_sample = calculateMinCorrelationSample(signalDelay);
-    int relative_shift = calculateCrossCorrelation(buffer, used_channels[0], used_channels[1], min_correlation_sample, max_correlation_sample);
+    int relative_shift = calculateCrossCorrelationFiltered(buffer, used_channels[0], used_channels[1], min_correlation_sample, max_correlation_sample);
 
-    Serial.print("signalDelay: "); Serial.println(signalDelay, DEC);
-    Serial.print("max_correlation_sample: "); Serial.println(max_correlation_sample, DEC);
-    Serial.print("min_correlation_sample: "); Serial.println(min_correlation_sample, DEC);
-    Serial.print("relative_shift: "); Serial.println(relative_shift, DEC);
+    // Serial.print("signalDelay: "); Serial.println(signalDelay, DEC);
+    // Serial.print("max_correlation_sample: "); Serial.println(max_correlation_sample, DEC);
+    // Serial.print("min_correlation_sample: "); Serial.println(min_correlation_sample, DEC);
+    // Serial.print("relative_shift: "); Serial.println(relative_shift, DEC);
 
     (*distance_cm) = calculateDistance(signalDelay);
     (*angle) = calculateAngleFromShift(relative_shift);
@@ -62,7 +64,6 @@ public:
 
 private:
   int angleLookup[181];  // -90 to +90 degrees
-  uint8_t signal_block[PULSE_WIDTH_SAMPLES];
 
   void calculateAngleLookupTable() {
     for (int i = -90; i <= 90; i++) {
@@ -86,54 +87,47 @@ private:
     return num_used_channels;
   }
 
-  void filterUsedChannels(uint8_t (*buffer)[N_CHANNELS], int* used_channels, int num_used_channels) {
+  int fiilterAndFindSignalDelay(uint8_t (*buffer)[N_CHANNELS], int* used_channels, int num_used_channels) {
+    float * filtered = (float *)malloc(PULSE_WIDTH_SAMPLES * sizeof(float));
+    int minDelay = INT_MAX;
+
     for (int i = 0; i < num_used_channels; i++) {
       // initialize band pass filter
       BWBandPass* filter = create_bw_band_pass_filter(BAND_PASS_ORDER, SAMPEL_RATE, BAND_PASS_LOW_CUT, BAND_PASS_HIGH_CUT);
 
       // filter channel
-      for (int j = 0; j < DATA_BUFFER; j++) {
-        int temp = (127 + bw_band_pass(filter, buffer[j][used_channels[i]]));
-        buffer[j][used_channels[i]] = (uint8_t)temp;
+      float max_correlationVal = 0;
+      int delay = 0;
+      float correlationVal = 0;
+      for (int j = PULSE_WIDTH_SAMPLES, relative = 0; j < DATA_BUFFER; j++, relative++) {
+        float tempFilteredCorr = ((float)bw_band_pass(filter, buffer[j][used_channels[i]]) * 255.0d);
+        filtered[MIN(PULSE_WIDTH_SAMPLES-1, relative)] = tempFilteredCorr;
+        correlationVal += tempFilteredCorr;
 
-        if (temp < 0 || temp > 255) {
-          Serial.print("filter: "); Serial.println(temp, DEC);
+        // when buffer is filled, correlate signal block
+        if (relative >= PULSE_WIDTH_SAMPLES-1) {
+          if (correlationVal > max_correlationVal) {
+            max_correlationVal = correlationVal;
+            delay = relative + 1;
+          }
+
+          correlationVal -= filtered[0]; // remove the oldest correlation value
+
+          // when buffer is filled, left-shift the array by one entry
+          memcpy(filtered, filtered + 1, sizeof(float) * (PULSE_WIDTH_SAMPLES-1));
         }
       }
+
+      // set smallest delay
+      if (delay < minDelay) minDelay = delay;
 
       // free memory
       free_bw_band_pass(filter);
     }
-  }
 
-  int calculateSignalDelay(uint8_t (*buffer)[N_CHANNELS], int channel1, int channel2) {
-    int blockShift_0 = 0;
-    int blockShift_1 = 0;
-    int max_correlation_0 = 0;
-    int max_correlation_1 = 0;
-
-    for (int i = PULSE_WIDTH_SAMPLES; i < DATA_BUFFER - PULSE_WIDTH_SAMPLES; i++) {
-      int correlation_0 = 0;
-      int correlation_1 = 0;            
-      for (int j = 0; j < PULSE_WIDTH_SAMPLES; j++) {
-        correlation_0 += ((int)buffer[i + j][channel1] - 127) * signal_block[j];
-        correlation_1 += ((int)buffer[i + j][channel2] - 127) * signal_block[j];
-      }
-      if (correlation_0 > max_correlation_0) {
-        max_correlation_0 = correlation_0;
-        blockShift_0 = i;
-      }
-      if (correlation_1 > max_correlation_1) {
-        correlation_1 = max_correlation_1;
-        blockShift_1 = i;
-      }
-    }
-
-    Serial.print("blockShift_0: "); Serial.println(blockShift_0, DEC);
-    Serial.print("blockShift_1: "); Serial.println(blockShift_1, DEC);
-
-    int signalDelay = (blockShift_0 < blockShift_1) ? blockShift_0 : blockShift_1;
-    return signalDelay;
+    // free memory
+    free(filtered);
+    return minDelay;
   }
 
   int calculateDistance(int signalDelay) {
@@ -157,33 +151,51 @@ private:
     return max_correlation_sample;
   }
 
-  int calculateCrossCorrelation(uint8_t (*buffer)[N_CHANNELS], int channel1, int channel2, int min_sample, int max_sample) {
-    int correlation_length = (max_sample - min_sample) + 1;
-    int max_correlation = INT_MIN;
+  int calculateCrossCorrelationFiltered(uint8_t (*buffer)[N_CHANNELS], int channel1, int channel2, int min_sample, int max_sample) {
+    int length = (max_sample-min_sample) + 1;
+    float * filtered = (float *)malloc(sizeof(float) * 2 * length); // dynamic allocate buffer
+    if (filtered == NULL) {
+      Serial.println("malloc failed!");
+      return 0;
+    }
+
+    // filter desired section
+    BWBandPass* filter1 = create_bw_band_pass_filter(BAND_PASS_ORDER, SAMPEL_RATE, BAND_PASS_LOW_CUT, BAND_PASS_HIGH_CUT);
+    BWBandPass* filter2 = create_bw_band_pass_filter(BAND_PASS_ORDER, SAMPEL_RATE, BAND_PASS_LOW_CUT, BAND_PASS_HIGH_CUT);
+
+    for (int i = PULSE_WIDTH_SAMPLES, relative = (-min_sample + PULSE_WIDTH_SAMPLES); i <= max_sample; i++, relative++) {
+      filtered[MAX(0, relative)*2] = bw_band_pass(filter1, buffer[i][channel1]);
+      filtered[(MAX(0, relative)*2)+1] = bw_band_pass(filter2, buffer[i][channel2]);
+    }
+
+    // free memory
+    free_bw_band_pass(filter1);
+    free_bw_band_pass(filter2);
+
+    // correlate section
+    float max_correlation = INT_MIN;
     int max_correlation_idx = 0;
 
-    int shift_count = correlation_length * 0.5;
+    int shift_count = (length - 1) * 0.5;
 
     for (int i = -shift_count; i <= shift_count; ++i) {
-        int sum = 0;
+      float sum = 0;
 
-        for (int j = 0; j < correlation_length - abs(i); ++j) {
-            int idx1 = min_sample + j + MAX(0, i);
-            int idx2 = min_sample + j + MAX(0, -i);
+      for (int j = 0; j < length - abs(i); ++j) {
+        int idx1 = j + MAX(0, i);
+        int idx2 = j + MAX(0, -i);
 
-            if (idx1 < min_sample || idx2 < min_sample || idx1 > max_sample || idx2 > max_sample) {
-              Serial.println("correlation boundery");
-              continue;
-            }
+        sum += filtered[(idx1*2)+1] * filtered[(idx2*2)];
+      }
 
-            sum += (((int)buffer[idx1][channel1]) - 127) * (((int)buffer[idx2][channel2]) - 127);
-        }
-
-        if (sum >= max_correlation) {
-            max_correlation = sum;
-            max_correlation_idx = i;            
-        }
+      if (sum >= max_correlation) {
+        max_correlation = sum;
+        max_correlation_idx = i;            
+      }
     }
+
+    // clear buffer
+    free(filtered);
 
     return max_correlation_idx;
   }

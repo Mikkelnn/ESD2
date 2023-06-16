@@ -19,7 +19,7 @@ pulse_width_sampels = int(pulse_width_ms * sampels_per_ms)
 
 low = 38200 # low = 38200
 high = 38700
-order = 5
+order = 4 # 4th order low and high pass
 ms = 20 # number of milliseconds of data to display 
 
 signal_block = []
@@ -83,9 +83,9 @@ def calculate(file_path):
   filtered = []
   for i in range(0, N_channels):
     channels.append(data[:, i]) # remove pulse at start
-    # channels[i] = channels[i] - np.mean(channels[i]) # Remove DC offset
+    channels[i] = channels[i] - np.mean(channels[i]) # Remove DC offset    
     # filtered.append(channels[i])
-    filtered.append(butter_bandpass_filter(channels[i], low, high, sampling_rate, order))
+    filtered.append([*channels[i][:pulse_width_sampels], *butter_bandpass_filter(channels[i][pulse_width_sampels:], low, high, sampling_rate, order)])
 
   # Find channels with data - i.e non zeros
   used_channels = []
@@ -98,8 +98,6 @@ def calculate(file_path):
   if (N_used_channels < 2):
     print('only one channel! - can´t cross correlate.....')
     return
-
-
 
   # determine the first occurence of the pulse recieved  
   blockShift_0 = np.correlate(filtered[used_channels[0]][pulse_width_sampels:], signal_block, mode='valid').argmax() + pulse_width_sampels
@@ -125,6 +123,11 @@ def calculate(file_path):
   print(f'min_correlation_sampel: {min_correlation_sampel}, max_correlation_sampel: {max_correlation_sampel}')
   print(f'idx shift: {relative_shift}, delay (us): {relative_shift * sampel_period_us}, AoA: {angleFromShift(relative_shift)}')
   print(f'blockShift_0: {blockShift_0}, blockShift_1: {blockShift_1}, diff: {blockShift_1 - blockShift_0}, AoA: {angleFromShift(blockShift_1 - blockShift_0)}')
+  
+  vcorr = np.correlate(filtered[used_channels[1]][pulse_width_sampels:], signal_block, mode='valid')
+  vmax = vcorr.argmax()
+  print(f'r: {vmax + pulse_width_sampels}: {vcorr[vmax]}')
+
   return
 
   # draw visualization of data

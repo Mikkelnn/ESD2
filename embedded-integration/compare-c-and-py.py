@@ -4,6 +4,15 @@ import numpy as np
 import correlation
 import time
 
+
+# select csv file
+# file_path = easygui.fileopenbox()
+# file_path = "C:\CSharp\AAU\ESD2\FFT_python\lyd_lab\\20230509-105904-(human side center 2m).csv"
+file_path = "T:\Repoes\AAU\ESD2\Project\FFT_python\lyd_lab\\20230509-105904-(human side center 2m).csv"
+
+correlation.calculate(file_path)
+exit()
+
 ser = serial.Serial(
     port='/COM3',
     baudrate=115200,
@@ -12,15 +21,7 @@ ser = serial.Serial(
     bytesize=serial.EIGHTBITS
 )
 
-
-# select csv file
-# file_path = easygui.fileopenbox()
-file_path = "C:\CSharp\AAU\ESD2\FFT_python\lyd_lab\\20230509-105904-(human side center 2m).csv"
-# file_path = "T:\Repoes\AAU\ESD2\Project\FFT_python\lyd_lab\\20230509-105904-(human side center 2m).csv"
 data = np.genfromtxt(file_path, delimiter=',')
-
-# get number of channels from data
-N_channels = data.shape[1]
 
 if not ser.is_open:
   ser.open()
@@ -34,7 +35,7 @@ for s in data:
     ser.write(bytes([int(ch)]))
 
 print("done")
-time.sleep(1)
+# time.sleep(1)
 ser.close()
 
 correlation.calculate(file_path)
